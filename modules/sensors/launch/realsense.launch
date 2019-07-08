@@ -1,7 +1,0 @@
-<cyber>
-  <module>
-    <name>realsense_component</name>
-    <dag_conf>../modules/sensors/dag/realsense.dag</dag_conf>
-    <process_name>realsense_component</process_name>
-  </module>
-</cyber>
