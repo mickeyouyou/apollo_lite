@@ -35,15 +35,14 @@ using apollo::cyber::event::PerfEventCache;
 using apollo::cyber::event::SchedPerf;
 
 std::shared_ptr<CRoutine> ChoreographyContext::NextRoutine() {
-  if (unlikely(stop_)) {
+  if (unlikely(stop_.load())) {
     return nullptr;
   }
 
   ReadLockGuard<AtomicRWLock> lock(rq_lk_);
-  for (auto it = cr_queue_.begin(); it != cr_queue_.end();) {
-    auto cr = it->second;
+  for (auto it : cr_queue_) {
+    auto cr = it.second;
     if (!cr->Acquire()) {
-      ++it;
       continue;
     }
 
@@ -52,47 +51,58 @@ std::shared_ptr<CRoutine> ChoreographyContext::NextRoutine() {
                                                 cr->processor_id());
       return cr;
     }
-
     cr->Release();
-    ++it;
   }
-
-  notified_.clear();
   return nullptr;
 }
 
 bool ChoreographyContext::Enqueue(const std::shared_ptr<CRoutine>& cr) {
-  PerfEventCache::Instance()->AddSchedEvent(SchedPerf::RT_CREATE, cr->id(),
-                                            cr->processor_id());
   WriteLockGuard<AtomicRWLock> lock(rq_lk_);
   cr_queue_.emplace(cr->priority(), cr);
   return true;
 }
 
 void ChoreographyContext::Notify() {
-  if (!notified_.test_and_set(std::memory_order_acquire)) {
-    cv_wq_.notify_one();
-    return;
-  }
+  mtx_wq_.lock();
+  notify++;
+  mtx_wq_.unlock();
+  cv_wq_.notify_one();
 }
 
 void ChoreographyContext::Wait() {
   std::unique_lock<std::mutex> lk(mtx_wq_);
-  cv_wq_.wait_for(lk, std::chrono::milliseconds(1));
+  cv_wq_.wait_for(lk, std::chrono::milliseconds(1000),
+                  [&]() { return notify > 0; });
+  if (notify > 0) {
+    notify--;
+  }
 }
 
-void ChoreographyContext::RemoveCRoutine(uint64_t crid) {
+void ChoreographyContext::Shutdown() {
+  stop_.store(true);
+  mtx_wq_.lock();
+  notify = INT_MAX;
+  mtx_wq_.unlock();
+  cv_wq_.notify_all();
+}
+
+bool ChoreographyContext::RemoveCRoutine(uint64_t crid) {
   WriteLockGuard<AtomicRWLock> lock(rq_lk_);
   for (auto it = cr_queue_.begin(); it != cr_queue_.end();) {
     auto cr = it->second;
     if (cr->id() == crid) {
       cr->Stop();
+      while (!cr->Acquire()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        AINFO_EVERY(1000) << "waiting for task " << cr->name() << " completion";
+      }
       it = cr_queue_.erase(it);
       cr->Release();
-      return;
+      return true;
     }
     ++it;
   }
+  return false;
 }
 }  // namespace scheduler
 }  // namespace cyber

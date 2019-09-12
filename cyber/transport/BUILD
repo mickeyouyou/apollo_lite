@@ -85,6 +85,7 @@ cc_library(
     deps = [
         ":listener_handler",
         ":message_info",
+        "//cyber/message:message_traits",
         "//cyber/proto:role_attributes_cc_proto",
     ],
 )

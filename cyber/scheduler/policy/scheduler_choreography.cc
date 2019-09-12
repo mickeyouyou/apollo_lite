@@ -202,19 +202,14 @@ bool SchedulerChoreography::RemoveCRoutine(uint64_t crid) {
   }
   std::lock_guard<std::mutex> lg(wrapper->Mutex());
 
-  // Find cr from id_cr &&
-  // get cr prio if cr found
-  int prio;
+  std::shared_ptr<CRoutine> cr = nullptr;
   int pid;
-  std::string group_name;
   {
     WriteLockGuard<AtomicRWLock> lk(id_cr_lock_);
     auto p = id_cr_.find(crid);
     if (p != id_cr_.end()) {
-      auto cr = p->second;
-      prio = cr->priority();
+      cr = p->second;
       pid = cr->processor_id();
-      group_name = cr->group_name();
       id_cr_[crid]->Stop();
       id_cr_.erase(crid);
     } else {
@@ -224,25 +219,11 @@ bool SchedulerChoreography::RemoveCRoutine(uint64_t crid) {
 
   // rm cr from pool if rt not in choreo context
   if (pid == -1) {
-    WriteLockGuard<AtomicRWLock> lk(
-        ClassicContext::rq_locks_[group_name].at(prio));
-    auto& croutines = ClassicContext::cr_group_[group_name].at(prio);
-    for (auto it = croutines.begin(); it != croutines.end(); ++it) {
-      if ((*it)->id() == crid) {
-        auto cr = *it;
-
-        cr->Stop();
-        croutines.erase(it);
-        cr->Release();
-        return true;
-      }
-    }
+    return ClassicContext::RemoveCRoutine(cr);
   } else {
-    static_cast<ChoreographyContext*>(pctxs_[pid].get())->RemoveCRoutine(crid);
-    return true;
+    return static_cast<ChoreographyContext*>(pctxs_[pid].get())
+        ->RemoveCRoutine(crid);
   }
-
-  return false;
 }
 
 bool SchedulerChoreography::NotifyProcessor(uint64_t crid) {
@@ -258,7 +239,8 @@ bool SchedulerChoreography::NotifyProcessor(uint64_t crid) {
     auto it = id_cr_.find(crid);
     if (it != id_cr_.end()) {
       cr = it->second;
-      if (cr->state() == RoutineState::DATA_WAIT) {
+      if (cr->state() == RoutineState::DATA_WAIT ||
+          cr->state() == RoutineState::IO_WAIT) {
         cr->SetUpdateFlag();
       }
     } else {
