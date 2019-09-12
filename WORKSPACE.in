@@ -70,3 +70,10 @@ new_local_repository(
     build_file = "third_party/python27.BUILD",
     path = "/usr",
 )
+
+# qt
+new_local_repository(
+    name = "qt",
+    build_file = "third_party/qt.BUILD",
+    path = "/usr/local/Qt5.5.1/5.5/gcc_64",
+)
