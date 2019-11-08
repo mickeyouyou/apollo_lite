@@ -1,6 +1,8 @@
+#!/usr/bin/env python2
+
 # ****************************************************************************
 # Copyright 2019 The Apollo Authors. All Rights Reserved.
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
@@ -13,28 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ****************************************************************************
-# -*- coding: utf-8 -*-
-"""Module for test node."""
 
-import unittest
+"""Module for test cyber timer."""
+
 import time
+import unittest
 
 from cyber_py import cyber
 from cyber_py import cyber_timer
 
-global count
-count = 0
 
-def func():
-    global count
-    print('Callback function is called [%d] times.' % count)
-    count += 1
-
-
-class TestNode(unittest.TestCase):
+class TestCyberTimer(unittest.TestCase):
     """
-    Class for node unit test.
+    Class for cyber timer unit test.
     """
+
+    count = 0
+
     @classmethod
     def setUpClass(cls):
         cyber.init()
@@ -43,22 +40,24 @@ class TestNode(unittest.TestCase):
     def tearDownClass(cls):
         cyber.shutdown()
 
+    def func(cls):
+        print('Callback function is called [%d] times.' % cls.count)
+        cls.count += 1
+
     def test_timer(self):
-        cyber.init()
-        ct = cyber_timer.Timer(100, func, 0)  # 100ms
+        ct = cyber_timer.Timer(100, self.func, 0)  # 100ms
         ct.start()
         time.sleep(1)  # 1s
         ct.stop()
 
         print('+' * 40 + 'test set_option' + '+' * 40)
         ct2 = cyber_timer.Timer()  # 10ms
-        ct2.set_option(100, func, 0)
+        ct2.set_option(100, self.func, 0)
         ct2.start()
         time.sleep(1)  # 1s
         ct2.stop()
 
-        cyber.shutdown()
-
 
 if __name__ == '__main__':
     unittest.main()
+    # TODO(xiaoxq): It hangs here for a long time.

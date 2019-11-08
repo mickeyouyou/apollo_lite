@@ -83,7 +83,7 @@ PyObject *cyber_PyWriter_write(PyObject *self, PyObject *args) {
   Py_ssize_t len = 0;
   if (!PyArg_ParseTuple(args, const_cast<char *>("Os#:cyber_PyWriter_write"),
                         &pyobj_writer, &data, &len)) {
-    AINFO << "cyber_PyWriter_write:cyber_PyWriter_write failed!";
+    AERROR << "cyber_PyWriter_write:cyber_PyWriter_write failed!";
     return PyInt_FromLong(1);
   }
 
@@ -91,7 +91,7 @@ PyObject *cyber_PyWriter_write(PyObject *self, PyObject *args) {
       pyobj_writer, "apollo_cyber_pywriter");
 
   if (nullptr == writer) {
-    AINFO << "cyber_PyWriter_write:writer ptr is null!";
+    AERROR << "cyber_PyWriter_write:writer ptr is null!";
     return PyInt_FromLong(1);
   }
 
@@ -150,29 +150,28 @@ PyObject *cyber_PyReader_read(PyObject *self, PyObject *args) {
 
   if (!PyArg_ParseTuple(args, const_cast<char *>("OO:cyber_PyReader_read"),
                         &pyobj_reader, &pyobj_iswait)) {
-    AINFO << "cyber_PyReader_read:PyArg_ParseTuple failed!";
+    AERROR << "cyber_PyReader_read:PyArg_ParseTuple failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
   apollo::cyber::PyReader *reader = PyObjectToPtr<apollo::cyber::PyReader *>(
       pyobj_reader, "apollo_cyber_pyreader");
   if (nullptr == reader) {
-    AINFO << "cyber_PyReader_read:PyReader ptr is null!";
+    AERROR << "cyber_PyReader_read:PyReader ptr is null!";
     Py_INCREF(Py_None);
     return Py_None;
   }
 
   int r = PyObject_IsTrue(pyobj_iswait);
   if (r == -1) {
-    AINFO << "cyber_PyReader_read:pyobj_iswait is error!";
+    AERROR << "cyber_PyReader_read:pyobj_iswait is error!";
     Py_INCREF(Py_None);
     return Py_None;
   }
 
-  bool wait = (r == 1 ? true : false);
+  bool wait = (r == 1);
 
   std::string reader_ret = reader->read(wait);
-  // AINFO << "c++:PyReader_read -> " << reader_ret;
   return PyString_FromStringAndSize(reader_ret.c_str(), reader_ret.size());
 }
 
@@ -215,7 +214,7 @@ PyObject *cyber_new_PyClient(PyObject *self, PyObject *args) {
   node = (apollo::cyber::Node *)PyCapsule_GetPointer(node_pyobj,
                                                      "apollo_cyber_pynode");
   if (!node) {
-    AINFO << "node is null";
+    AERROR << "node is null";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -250,7 +249,7 @@ PyObject *cyber_PyClient_send_request(PyObject *self, PyObject *args) {
   Py_ssize_t len = 0;
   if (!PyArg_ParseTuple(args, const_cast<char *>("Os#:PyClient_send_request"),
                         &pyobj_client, &data, &len)) {
-    AINFO << "cyber_PyClient_send_request:PyArg_ParseTuple failed!";
+    AERROR << "cyber_PyClient_send_request:PyArg_ParseTuple failed!";
     return PYOBJECT_NULL_STRING;
   }
 
@@ -258,15 +257,15 @@ PyObject *cyber_PyClient_send_request(PyObject *self, PyObject *args) {
       pyobj_client, "apollo_cyber_pyclient");
 
   if (nullptr == client) {
-    AINFO << "cyber_PyClient_send_request:client ptr is null!";
+    AERROR << "cyber_PyClient_send_request:client ptr is null!";
     return PYOBJECT_NULL_STRING;
   }
 
   std::string data_str(data, len);
-  AINFO << "c++:PyClient_send_request data->[ " << data_str << "]";
+  ADEBUG << "c++:PyClient_send_request data->[ " << data_str << "]";
   std::string response_str =
       client->send_request((std::string const &)data_str);
-  AINFO << "c++:response data->[ " << response_str << "]";
+  ADEBUG << "c++:response data->[ " << response_str << "]";
   return PyString_FromStringAndSize(response_str.c_str(), response_str.size());
 }
 
@@ -342,18 +341,18 @@ PyObject *cyber_PyService_read(PyObject *self, PyObject *args) {
   PyObject *pyobj_service = nullptr;
   if (!PyArg_ParseTuple(args, const_cast<char *>("O:cyber_PyService_read"),
                         &pyobj_service)) {
-    AINFO << "cyber_PyService_read:PyArg_ParseTuple failed!";
+    AERROR << "cyber_PyService_read:PyArg_ParseTuple failed!";
     return PYOBJECT_NULL_STRING;
   }
   apollo::cyber::PyService *service = PyObjectToPtr<apollo::cyber::PyService *>(
       pyobj_service, "apollo_cyber_pyservice");
   if (nullptr == service) {
-    AINFO << "cyber_PyService_read:service ptr is null!";
+    AERROR << "cyber_PyService_read:service ptr is null!";
     return PYOBJECT_NULL_STRING;
   }
 
   std::string reader_ret = service->read();
-  AINFO << "c++:PyService_read -> " << reader_ret;
+  ADEBUG << "c++:PyService_read -> " << reader_ret;
   return PyString_FromStringAndSize(reader_ret.c_str(), reader_ret.size());
 }
 
@@ -363,7 +362,7 @@ PyObject *cyber_PyService_write(PyObject *self, PyObject *args) {
   Py_ssize_t len = 0;
   if (!PyArg_ParseTuple(args, const_cast<char *>("Os#:cyber_PyService_write"),
                         &pyobj_service, &data, &len)) {
-    AINFO << "cyber_PyService_write:PyArg_ParseTuple failed!";
+    AERROR << "cyber_PyService_write:PyArg_ParseTuple failed!";
     return PyInt_FromLong(1);
   }
 
@@ -371,12 +370,12 @@ PyObject *cyber_PyService_write(PyObject *self, PyObject *args) {
       pyobj_service, "apollo_cyber_pyservice");
 
   if (nullptr == service) {
-    AINFO << "cyber_PyService_write:writer ptr is null!";
+    AERROR << "cyber_PyService_write:writer ptr is null!";
     return PyInt_FromLong(1);
   }
 
   std::string data_str(data, len);
-  AINFO << "c++:PyService_write data->[ " << data_str << "]";
+  ADEBUG << "c++:PyService_write data->[ " << data_str << "]";
   int ret = service->write((std::string const &)data_str);
   return PyInt_FromLong(ret);
 }
@@ -417,7 +416,7 @@ PyObject *cyber_PyNode_create_writer(PyObject *self, PyObject *args) {
 
   if (!PyArg_ParseTuple(args, const_cast<char *>("OssI:PyNode_create_writer"),
                         &pyobj_node, &channel_name, &type_name, &qos_depth)) {
-    AINFO << "cyber_PyNode_create_writer:PyArg_ParseTuple failed!";
+    AERROR << "cyber_PyNode_create_writer:PyArg_ParseTuple failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -452,7 +451,7 @@ PyObject *cyber_PyNode_create_reader(PyObject *self, PyObject *args) {
 
   if (!PyArg_ParseTuple(args, const_cast<char *>("Oss:PyNode_create_reader"),
                         &pyobj_node, &channel_name, &type_name)) {
-    AINFO << "PyNode_create_reader:PyArg_ParseTuple failed!";
+    AERROR << "PyNode_create_reader:PyArg_ParseTuple failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -481,7 +480,7 @@ PyObject *cyber_PyNode_create_client(PyObject *self, PyObject *args) {
 
   if (!PyArg_ParseTuple(args, const_cast<char *>("Oss:PyNode_create_client"),
                         &pyobj_node, &channel_name, &type_name)) {
-    AINFO << "PyNode_create_client:PyArg_ParseTuple failed!";
+    AERROR << "PyNode_create_client:PyArg_ParseTuple failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -511,7 +510,7 @@ PyObject *cyber_PyNode_create_service(PyObject *self, PyObject *args) {
   if (!PyArg_ParseTuple(args,
                         const_cast<char *>("Oss:cyber_PyNode_create_service"),
                         &pyobj_node, &channel_name, &type_name)) {
-    AINFO << "cyber_PyNode_create_service:PyArg_ParseTuple failed!";
+    AERROR << "cyber_PyNode_create_service:PyArg_ParseTuple failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -537,7 +536,7 @@ PyObject *cyber_PyNode_shutdown(PyObject *self, PyObject *args) {
 
   if (!PyArg_ParseTuple(args, const_cast<char *>("O:PyNode_shutdown"),
                         &pyobj_node)) {
-    AINFO << "cyber_PyNode_shutdown:PyNode_shutdown failed!";
+    AERROR << "cyber_PyNode_shutdown:PyNode_shutdown failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -561,7 +560,7 @@ PyObject *cyber_PyNode_register_message(PyObject *self, PyObject *args) {
   if (!PyArg_ParseTuple(args,
                         const_cast<char *>("Os#:cyber_PyNode_register_message"),
                         &pyobj_node, &desc, &len)) {
-    AINFO << "cyber_PyNode_register_message: failed!";
+    AERROR << "cyber_PyNode_register_message: failed!";
     Py_INCREF(Py_None);
     return Py_None;
   }
@@ -819,7 +818,7 @@ struct student {
 
 student *cyber_student() {
   student *stu1 = new student();
-  stu1->name = "ywf";
+  stu1->name = "lily";
   stu1->age = 22;
   return stu1;
 }
@@ -830,6 +829,7 @@ PyObject *cyber_test1(PyObject *self, PyObject *args) {
   char *s = 0;
   int len = 0;
   if (!PyArg_ParseTuple(args, "sss#", &channel, &data_type, &s, &len)) {
+    Py_INCREF(Py_None);
     return Py_None;
   }
   std::string str(s, len);
@@ -848,8 +848,8 @@ PyObject *cyber_test1(PyObject *self, PyObject *args) {
   AINFO << "===========================";
   // shared ptr
   std::vector<std::string> *strPtrV = new std::vector<std::string>;
-  strPtrV->push_back("ywf");
-  strPtrV->push_back("lj");
+  strPtrV->push_back("lily");
+  strPtrV->push_back("Jack");
   PyObject *py_stu1 = PyCapsule_New(strPtrV, "studentptr", nullptr);
   AINFO << "capsule name->" << PyCapsule_GetName(py_stu1);
 

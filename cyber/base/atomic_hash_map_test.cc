@@ -16,10 +16,9 @@
 
 #include "cyber/base/atomic_hash_map.h"
 
+#include <gtest/gtest.h>
 #include <string>
 #include <thread>
-
-#include "gtest/gtest.h"
 
 namespace apollo {
 namespace cyber {
@@ -93,7 +92,7 @@ TEST(AtomicHashMapTest, concurrency) {
     EXPECT_TRUE(map.Get(i, &value));
     EXPECT_EQ(std::to_string(i), value);
   }
-  std::string* str;
+  std::string* str = nullptr;
   EXPECT_TRUE(map.Get(0, &str));
   EXPECT_EQ("0", *str);
 }

@@ -1,6 +1,8 @@
+#!/usr/bin/env python2
+
 # ****************************************************************************
 # Copyright 2019 The Apollo Authors. All Rights Reserved.
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
@@ -14,11 +16,11 @@
 # limitations under the License.
 # ****************************************************************************
 # -*- coding: utf-8 -*-
-"""Module for test node."""
+"""Module for test cyber_time."""
 
 import sys
-import unittest
 import time
+import unittest
 
 from cyber_py import cyber
 from cyber_py import cyber_time
@@ -41,18 +43,19 @@ class TestTime(unittest.TestCase):
         ct = cyber_time.Time(123)
         self.assertEqual(123, ct.to_nsec())
         ftime = ct.now().to_sec()
-        print ftime
+        print(ftime)
         time.sleep(1)
         ftime = cyber_time.Time.now().to_sec()
-        print ftime
+        print(ftime)
         ftime = cyber_time.Time.mono_time().to_sec()
-        print ftime
+        print(ftime)
 
         td1 = cyber_time.Duration(111)
         tm1 = ct - td1
         self.assertEqual(12, tm1.to_nsec())
 
         tm5 = cyber_time.Time(1.8)
+        self.assertFalse(tm5.iszero())
         self.assertEqual(1800000000, tm5.to_nsec())
         tm7 = cyber_time.Time(tm5)
         self.assertEqual(1800000000, tm7.to_nsec())
@@ -65,13 +68,13 @@ class TestTime(unittest.TestCase):
         self.assertEqual(601000000000, td2.to_nsec())
         self.assertEqual(601000000000 - 111, td3.to_nsec())
 
-        print td2.to_sec()
+        print(td2.to_sec())
         self.assertEqual(601.0, td2.to_sec())
         self.assertFalse(td2.iszero())
-        print str(td2)
+        print(str(td2))
         td5 = cyber_time.Duration(1.8)
         td6 = td5
-        print type(td6)
+        print(type(td6))
         self.assertTrue(isinstance(td6, cyber_time.Duration))
 
     def test_rate(self):

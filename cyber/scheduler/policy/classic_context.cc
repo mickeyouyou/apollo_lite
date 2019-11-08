@@ -16,7 +16,7 @@
 
 #include "cyber/scheduler/policy/classic_context.h"
 
-#include "cyber/event/perf_event_cache.h"
+#include <limits.h>
 
 namespace apollo {
 namespace cyber {
@@ -27,8 +27,6 @@ using apollo::cyber::base::ReadLockGuard;
 using apollo::cyber::base::WriteLockGuard;
 using apollo::cyber::croutine::CRoutine;
 using apollo::cyber::croutine::RoutineState;
-using apollo::cyber::event::PerfEventCache;
-using apollo::cyber::event::SchedPerf;
 
 alignas(CACHELINE_SIZE) GRP_WQ_MUTEX ClassicContext::mtx_wq_;
 alignas(CACHELINE_SIZE) GRP_WQ_CV ClassicContext::cv_wq_;
@@ -52,7 +50,7 @@ void ClassicContext::InitGroup(const std::string& group_name) {
 }
 
 std::shared_ptr<CRoutine> ClassicContext::NextRoutine() {
-  if (unlikely(stop_.load())) {
+  if (cyber_unlikely(stop_.load())) {
     return nullptr;
   }
 
@@ -64,8 +62,6 @@ std::shared_ptr<CRoutine> ClassicContext::NextRoutine() {
       }
 
       if (cr->UpdateState() == RoutineState::READY) {
-        PerfEventCache::Instance()->AddSchedEvent(SchedPerf::NEXT_RT, cr->id(),
-                                                  cr->processor_id());
         return cr;
       }
 
@@ -88,7 +84,7 @@ void ClassicContext::Wait() {
 void ClassicContext::Shutdown() {
   stop_.store(true);
   mtx_wrapper_->Mutex().lock();
-  notify_grp_[current_grp] = INT_MAX;
+  notify_grp_[current_grp] = UCHAR_MAX;
   mtx_wrapper_->Mutex().unlock();
   cw_->Cv().notify_all();
 }

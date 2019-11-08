@@ -57,12 +57,32 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "endpoint_test",
+    size = "small",
+    srcs = ["common/endpoint_test.cc"],
+    deps = [
+        "//cyber:cyber_core",
+        "@gtest//:main",
+    ],
+)
+
 cc_library(
     name = "identity",
     srcs = ["common/identity.cc"],
     hdrs = ["common/identity.h"],
     deps = [
         "//cyber/common:util",
+    ],
+)
+
+cc_test(
+    name = "identity_test",
+    size = "small",
+    srcs = ["common/identity_test.cc"],
+    deps = [
+        "//cyber:cyber_core",
+        "@gtest//:main",
     ],
 )
 
@@ -162,7 +182,7 @@ cc_library(
         ":dispatcher",
         ":notifier_factory",
         ":readable_info",
-        ":segment",
+        ":segment_factory",
         "//cyber/message:message_traits",
         "//cyber/proto:proto_desc_cc_proto",
         "//cyber/scheduler:scheduler_factory",
@@ -209,6 +229,18 @@ cc_library(
         "//cyber/common",
         "//cyber/message:raw_message",
         "//cyber/transport:identity",
+    ],
+)
+
+cc_test(
+    name = "message_info_test",
+    size = "small",
+    srcs = [
+        "message/message_info_test.cc",
+    ],
+    deps = [
+        "//cyber:cyber_core",
+        "@gtest//:main",
     ],
 )
 
@@ -274,7 +306,6 @@ cc_library(
     deps = [
         ":readable_info",
         ":receiver",
-        ":segment",
     ],
 )
 
@@ -294,6 +325,7 @@ cc_library(
     srcs = ["rtps/underlay_message.cc"],
     hdrs = ["rtps/underlay_message.h"],
     deps = [
+        "//cyber/common:log",
         "@fastrtps",
     ],
 )
@@ -405,6 +437,28 @@ cc_library(
 )
 
 cc_library(
+    name = "xsi_segment",
+    srcs = ["shm/xsi_segment.cc"],
+    hdrs = ["shm/xsi_segment.h"],
+    deps = [
+        ":segment",
+        "//cyber/common:log",
+        "//cyber/common:util",
+    ],
+)
+
+cc_library(
+    name = "posix_segment",
+    srcs = ["shm/posix_segment.cc"],
+    hdrs = ["shm/posix_segment.h"],
+    deps = [
+        ":segment",
+        "//cyber/common:log",
+        "//cyber/common:util",
+    ],
+)
+
+cc_library(
     name = "segment",
     srcs = ["shm/segment.cc"],
     hdrs = ["shm/segment.h"],
@@ -414,6 +468,19 @@ cc_library(
         ":state",
         "//cyber/common:log",
         "//cyber/common:util",
+    ],
+)
+
+cc_library(
+    name = "segment_factory",
+    srcs = ["shm/segment_factory.cc"],
+    hdrs = ["shm/segment_factory.h"],
+    deps = [
+        ":posix_segment",
+        ":segment",
+        ":xsi_segment",
+        "//cyber/common:global_data",
+        "//cyber/common:log",
     ],
 )
 
@@ -515,6 +582,16 @@ cc_test(
         "//cyber:cyber_core",
         "//cyber/proto:unit_test_cc_proto",
         "@gtest",
+    ],
+)
+
+cc_test(
+    name = "condition_notifier_test",
+    size = "small",
+    srcs = ["shm/condition_notifier_test.cc"],
+    deps = [
+        "//cyber:cyber_core",
+        "@gtest//:main",
     ],
 )
 

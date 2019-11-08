@@ -1,6 +1,8 @@
+#!/usr/bin/env python2
+
 # ****************************************************************************
 # Copyright 2019 The Apollo Authors. All Rights Reserved.
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
@@ -15,22 +17,20 @@
 # ****************************************************************************
 # -*- coding: utf-8 -*-
 """Module for example of timer."""
-import sys
-import os
+
 import time
-import timer
 
 from cyber_py import cyber
 from cyber_py import cyber_timer
 
-global count
+
 count = 0
 
 
 def fun():
     global count
-    print "cb fun is called: ", count
-    count = count + 1
+    print("cb fun is called:", count)
+    count += 1
 
 
 def test_timer():
@@ -40,7 +40,7 @@ def test_timer():
     time.sleep(1)  # 1s
     ct.stop()
 
-    print "+" * 80, "test set_option"
+    print("+" * 80, "test set_option")
     ct2 = cyber_timer.Timer()  # 10ms
     ct2.set_option(10, fun, 0)
     ct2.start()

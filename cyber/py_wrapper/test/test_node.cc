@@ -17,11 +17,12 @@
 #include <memory>
 #include <string>
 
+#include <gtest/gtest.h>
+
 #include "cyber/cyber.h"
 #include "cyber/message/py_message.h"
 #include "cyber/proto/unit_test.pb.h"
 #include "cyber/py_wrapper/py_node.h"
-#include "gtest/gtest.h"
 
 using apollo::cyber::Time;
 using apollo::cyber::message::PyMessageWrap;
@@ -30,7 +31,9 @@ apollo::cyber::PyReader *pr = nullptr;
 
 int cbfun(const char *channel_name) {
   AINFO << "recv->[ " << channel_name << " ]";
-  if (pr) AINFO << "read->[ " << pr->read() << " ]";
+  if (pr) {
+    AINFO << "read->[ " << pr->read() << " ]";
+  }
 }
 
 TEST(CyberNodeTest, create_reader) {
